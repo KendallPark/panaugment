@@ -96,7 +96,8 @@ class Augmenter(object):
   def fetch_cache_filenames(self) -> List[Text]:
     file_patterns = self.cache_paths('*', [('*', '*') for i in
                                            range(self._cache_depth)])
-    return self._cache_storage_obj.list_files(file_patterns)
+    filenames = self._cache_storage_obj.list_files(file_patterns) or []
+    return filenames
 
   def update_cache_filenames(self) -> None:
     self._cache_filenames = set(self.fetch_cache_filenames())
