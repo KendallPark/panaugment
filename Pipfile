@@ -7,6 +7,9 @@ verify_ssl = true
 
 [packages]
 apache-libcloud = "*"
+tensorflow = ">=2.0"
+ipython = "*"
+numpy = "*"
 
 [requires]
 python_version = "3.7"

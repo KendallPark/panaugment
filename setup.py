@@ -7,4 +7,4 @@ setup(name='panaugment',
       author='Kendall Park',
       author_email='darkidder@gmail.com',
       license='MIT',
-      packages=['panaugment'])
+      packages=['panaugment'], install_requires=['tensorflow', 'numpy'])
