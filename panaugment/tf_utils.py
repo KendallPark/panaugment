@@ -20,13 +20,10 @@ def randaugment_dataset(
     global_magnitude: distortion.Magnitude,
     output_types: Any,
     depth: int = 1,
-    map_tf_fn: Callable[[Any], Any] = None,
     output_shapes: Any = None,
     args: Any = None):
-  def map_tf(x):
-    return x
 
-  map_tf = map_tf_fn or map_tf
+  _map_fn = map_fn or _map_fn
 
   def generator_fn():
     aug.update_cache_filenames()
@@ -34,6 +31,6 @@ def randaugment_dataset(
     for filename in aug.filenames:
       element = aug.augment(filename, randaugment(aug.distortion_names, depth,
                                                   global_magnitude))
-      yield map_tf(element)
+      yield element
 
   return tf.data.Dataset.from_generator(generator_fn, output_types, output_shapes, args)

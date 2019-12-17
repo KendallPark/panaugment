@@ -23,6 +23,7 @@ class Augmenter(object):
       cache_dir: Text = 'cache/',
       cache_depth: int = 1,
       cache_storage_obj: storage.Storage = None,
+      cache_map_fn: Callable[[Text], Any] = None,
       magnitude_str_fn: Callable[[distortion.Magnitude], Text] = None):
 
     self._storage_obj = storage_obj
@@ -58,6 +59,8 @@ class Augmenter(object):
 
     self._cache_filenames = set()
     self.update_cache_filenames()
+
+    self._cache_map_fn = cache_map_fn or identity
 
   @property
   def filenames(self) -> List[Text]:
@@ -127,7 +130,7 @@ class Augmenter(object):
         self._cache_storage_obj.save(self._cache_serialize_fn(element), path)
         self._cache_filenames.add(path)
 
-    return element
+    return self._cache_map_fn(element)
 
   def apply_distortion(self, element: Any, distortion_name: Text,
       magnitude: distortion.Magnitude) -> Any:
