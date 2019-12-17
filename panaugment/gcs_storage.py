@@ -15,11 +15,11 @@ class GCSStorage(storage.Storage):
   @classmethod
   def _load_fn(cls, filename, binary=False):
     binary_flag = 'b' if binary else ''
-    with tf.io.gfile.GFile(filename, f'r{binary_flag}') as file:
-      return file.read()
+    with tf.io.gfile.GFile(filename, f'r{binary_flag}') as f:
+      return f.read()
 
   @classmethod
   def _save_fn(cls, element, filename, binary=False):
     binary_flag = 'b' if binary else ''
-    with tf.io.gfile.GFile(filename, f'w{binary_flag}') as file:
-      file.write(element)
+    with tf.io.gfile.GFile(filename, f'w{binary_flag}') as f:
+      f.write(element)
