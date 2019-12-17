@@ -23,8 +23,6 @@ def randaugment_dataset(
     output_shapes: Any = None,
     args: Any = None):
 
-  _map_fn = map_fn or _map_fn
-
   def generator_fn():
     aug.update_cache_filenames()
 

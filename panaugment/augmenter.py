@@ -6,6 +6,8 @@ from . import storage
 import decimal
 import os
 
+import hashlib
+
 # from IPython import embed
 
 DistortionMagnitudePair = NewType('DistortionMagnitudePair',
@@ -82,11 +84,16 @@ class Augmenter(object):
   def cache_storage_obj(self) -> storage.Storage:
     return self._cache_storage_obj
 
+  def _cache_filename(self, filename):
+    return filename.replace('://', '.').replace('/', '.')
+
   def cache_path(self, filename: Text,
       distortion_steps: List[Tuple[Text, distortion.Magnitude]]) -> Text:
+    name = self._cache_filename(filename)
     dmlist = [(dm[0], self._magnitude_str_fn(dm[1])) for dm in distortion_steps]
-    return os.path.join(self._cache_dir, filename,
+    path = os.path.join(self._cache_dir, name,
                         *[str(item) for dmpair in dmlist for item in dmpair])
+    return f'{path}.cache'
 
   def cache_paths(self, filename: Text,
       distortion_steps: List[Tuple[Text, distortion.Magnitude]]) -> List[Text]:
@@ -96,8 +103,7 @@ class Augmenter(object):
   def fetch_cache_filenames(self) -> List[Text]:
     file_patterns = self.cache_paths('*', [('*', '*') for i in
                                            range(self._cache_depth)])
-    filenames = self._cache_storage_obj.list_files(file_patterns) or []
-    return filenames
+    return self._cache_storage_obj.list_files(file_patterns) or []
 
   def update_cache_filenames(self) -> None:
     self._cache_filenames = set(self.fetch_cache_filenames())
