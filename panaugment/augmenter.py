@@ -1,12 +1,11 @@
-from typing import Text, List, Callable, Union, Any, Tuple, NewType
+from typing import Text, List, Callable, Union, Any, Tuple, NewType, Dict
 
 from . import distortion
 from . import storage
 
 import decimal
 import os
-
-import hashlib
+import time
 
 # from IPython import embed
 
@@ -33,6 +32,9 @@ class Augmenter(object):
     self._source_files = storage_obj.list_files(file_pattern)
     self._distortions = distortions
     self._distortions_by_name = {d.name: d for d in distortions}
+    self._distortion_names = [d.name for d in distortions]
+    self._distortion_metrics = None
+    self._distortion_metrics_denominator = None
 
     if cache is None:
       self._cache = set([])
@@ -84,6 +86,11 @@ class Augmenter(object):
   def cache_storage_obj(self) -> storage.Storage:
     return self._cache_storage_obj
 
+  # def distortion_metrics(self) -> Dict[Text, float]:
+  #   if not self._distortion_metrics:
+  #     self.update_metrics()
+  #   return {dname: value/self._distortion_metrics_denominator for dname, value in self._distortion_metrics.items()}
+
   def _cache_filename(self, filename):
     return filename.replace('://', '.').replace('/', '.')
 
@@ -107,6 +114,26 @@ class Augmenter(object):
 
   def update_cache_filenames(self) -> None:
     self._cache_filenames = set(self.fetch_cache_filenames())
+
+  def apply_distortion(self, element: Any, distortion_name: Text,
+      magnitude: distortion.Magnitude) -> Any:
+    return self._distortions_by_name[distortion_name].distort(element,
+                                                              magnitude)
+  def update_metrics(self, samples=10, magnitude=0.5) -> None:
+    self._distortion_metrics_denominator = 0
+    self._distortion_metrics = {dname: 0 for dname in self._distortion_names}
+    for filename in self._source_files:
+      if self._distortion_metrics_denominator == samples:
+        break
+      element = self.storage_obj.load(filename)
+      for distortion_name in self._distortion_names:
+        start_time = time.perf_counter()
+        self.apply_distortion(element, distortion_name, magnitude)
+        self._distortion_metrics[distortion_name] += time.perf_counter() - start_time
+
+      self._distortion_metrics_denominator += 1
+    return self._distortion_metrics, self._distortion_metrics_denominator
+
 
   def augment(self, filename: Text, distortion_steps: Union[
     DistortionMagnitudePair, List[DistortionMagnitudePair]]) -> Any:
@@ -138,8 +165,3 @@ class Augmenter(object):
         self._cache_filenames.add(path)
 
     return self._cache_map_fn(element)
-
-  def apply_distortion(self, element: Any, distortion_name: Text,
-      magnitude: distortion.Magnitude) -> Any:
-    return self._distortions_by_name[distortion_name].distort(element,
-                                                              magnitude)
